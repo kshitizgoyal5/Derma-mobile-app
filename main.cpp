@@ -3,6 +3,7 @@
 #include <client.h>
 #include <opencvimageprovider.h>
 #include <QQmlContext>
+#include <clientudp.h>
 int main(int argc, char *argv[])
 {
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
@@ -13,7 +14,8 @@ int main(int argc, char *argv[])
 
         QQmlApplicationEngine engine;
 
-        Client videoStreamer;
+        //Client videoStreamer;
+        ClientUDP videoStreamer;
         OpencvImageProvider *liveImageProvider(new OpencvImageProvider);
 
         engine.rootContext()->setContextProperty("VideoStreamer",&videoStreamer);
@@ -21,11 +23,11 @@ int main(int argc, char *argv[])
 
         engine.addImageProvider("live",liveImageProvider);
 
-        const QUrl url(QStringLiteral("qrc:/main.qml"));
+        const QUrl url(QStringLiteral("qrc:/homepage.qml"));
 
         engine.load(url);
 
-        QObject::connect(&videoStreamer,&Client::newFrame,liveImageProvider,&OpencvImageProvider::updateImage);
-
+        //QObject::connect(&videoStreamer,&Client::newFrame,liveImageProvider,&OpencvImageProvider::updateImage);
+        QObject::connect(&videoStreamer,&ClientUDP::newFrame,liveImageProvider,&OpencvImageProvider::updateImage);
         return app.exec();
 }

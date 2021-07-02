@@ -1,5 +1,5 @@
 #include "client.h"
-#include <QtBluetooth/QBluetoothSocket>
+
 Client::Client(QObject *parent) : QObject(parent)
 {
     socket = new QTcpSocket();
@@ -40,24 +40,10 @@ void Client::readSocket()
         //socketStream >> image;
         m_size = 0;
         image = qUncompress(image);
-        //QString im("data:image/jpg;base64,");
-        //im.append(QString::fromLatin1(image.toBase64().data()));
-        //qDebug() <<imgsize.width()<<imgsize.height()<<byteCount;
-//        if(image.isNull()) qDebug() << "Image is Null";
-//        else{
-//            //qDebug() << image.height() << image.width() << image.format();
-//        }
-        //QByteArray bArray;
-        //QBuffer buffer(&image);
-        //buffer.open(QIODevice::WriteOnly);
 
         QImage  img = QImage(imgsize.width(), imgsize.height(), QImage::Format_RGB32);
 
         memcpy(img.bits(), image.data(), byteCount); // We write the image data into the new QImage
-
-        //QString img("data:image/jpg;base64,");
-        //img.append(QString::fromLatin1(bArray.toBase64().data()));
-        //emit readImage(image);
         emit newFrame(img);
         socket->write("ok");
 }
