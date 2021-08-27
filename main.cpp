@@ -1,9 +1,14 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <client.h>
+
 #include <opencvimageprovider.h>
 #include <QQmlContext>
+
+
 #include <clientudp.h>
+#include <client.h>
+#include "webserver.h"
+
 int main(int argc, char *argv[])
 {
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
@@ -17,10 +22,10 @@ int main(int argc, char *argv[])
         //Client videoStreamer;
         ClientUDP videoStreamer;
         OpencvImageProvider *liveImageProvider(new OpencvImageProvider);
-
+        WebServer server;
         engine.rootContext()->setContextProperty("VideoStreamer",&videoStreamer);
         engine.rootContext()->setContextProperty("liveImageProvider",liveImageProvider);
-
+        engine.rootContext()->setContextProperty("DermaServer", &server);
         engine.addImageProvider("live",liveImageProvider);
 
         const QUrl url(QStringLiteral("qrc:/homepage.qml"));

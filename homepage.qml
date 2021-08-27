@@ -6,6 +6,7 @@ import QtQuick.Extras 1.4
 import QtQuick.Controls 2.12
 import QtQml 2.12
 import QtQuick.Layouts 1.12
+import Qt.labs.platform 1.0
 import "./" as MyComponents
 
 ApplicationWindow{
@@ -121,8 +122,8 @@ ApplicationWindow{
                         anchors.rightMargin = 40
                     }
 
-                    width: parent.width
-                    height: parent.height
+//                    width: parent.width
+//                    height: parent.height
                     property color addPatientPageColor: "light yellow"
                     color: addPatientPageColor
 
@@ -174,11 +175,245 @@ ApplicationWindow{
 
             Component{
                 id: camera
-                MyComponents.Main{
-                    _rootColor: "light yellow"
+
+                Rectangle {
+                    id: cameraRoot
+                    visible: true
+                    property color cameraRootColor: "light yellow"
+                    color: cameraRootColor
+                    Component.onDestruction: {
+                        VideoStreamer.disconnectFromserver();
+                        imagePreview.source = "";
+                        opencvImage.source = "";
+                    }
+
+                    Column{
+                        anchors.fill: parent
+                        spacing: 20
+                        Rectangle{
+                            id: windowTop
+                            width: parent.width
+                            height: parent.height/10
+
+                            anchors.left: parent.left
+                            anchors.leftMargin: 10
+                            anchors.right: parent.right
+                            anchors.rightMargin: 10
+
+                            color: cameraRoot.cameraRootColor
+                            Text {
+                                id: appName
+                                text: "Derma App"
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                font.family: "Helvetica"
+                                font.pointSize: 20
+                                color: "black"
+                            }
+
+                            Button{
+                                text: "Connect";
+                                onClicked: {
+                                    VideoStreamer.connectToServer();
+                                }
+                                background: Rectangle {
+                                    border.color: "black"
+                                    color: "#f7d76a"
+                                }
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.right: parent.right
+                                anchors.topMargin: 10
+                                height: 40
+                            }
+                        }
+
+
+                        Rectangle{
+                            id: imageRect
+                            width: parent.width - 20;
+                            height: width
+                            anchors.left: parent.left
+                            anchors.leftMargin: 10
+                            anchors.right: parent.right
+                            anchors.rightMargin: 10
+                            color: cameraRoot.cameraRootColor
+
+                            Image{
+                                id: opencvImage
+                                anchors.fill: parent
+                                property bool counter: false
+                                property int framespersecond: 0
+                                source: "image://live/image"
+                                cache: false
+                                function reload(){
+                                    counter = !counter
+                                    source = "image://live/image?id=" + counter
+                                }
+                            }
+                            Text {
+                                id: fps
+                                text: qsTr("0")
+                                anchors.top: parent.top
+                                anchors.right: parent.right
+                                font.family: "Helvetica"
+                                font.pointSize: 24
+                                color: "red"
+                            }
+
+
+                            Timer {
+                                interval: 1000; running: true; repeat: true
+                                onTriggered: {
+                                    fps.text = opencvImage.framespersecond
+                                    opencvImage.framespersecond = 0
+                                }
+                            }
+                        }
+
+                        Rectangle{
+                            id: pictureSlide
+                            width: parent.width
+                            height: parent.height/5
+                            anchors.left: parent.left
+                            anchors.leftMargin: 10
+                            anchors.right: parent.right
+                            anchors.rightMargin: 10
+                            color: cameraRoot.cameraRootColor
+
+                            Button{
+                                text: "Capture";
+
+                                background: Rectangle {
+                                    border.color: "black"
+                                    color: "#f7d76a"
+                                }
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                height: 40
+
+                                onClicked: {
+                                    imagePreview.reload()
+                                }
+                            }
+
+
+                            Rectangle{
+                                id: wImagePreview
+                                width: height
+                                height: parent.height
+                                anchors.right: parent.right
+                                color: cameraRoot.cameraRootColor
+
+                                MouseArea{
+                                    anchors.fill: parent
+                                    onClicked: {
+                                        if(imagePreview.source != "")
+                                        stack.push(fullScreenPreview)
+                                    }
+                                }
+
+                                Image{
+                                    id: imagePreview
+                                    anchors.fill: parent
+                                    property bool counter: false
+                                    cache: false
+
+                                    function reload(){
+                                        counter = !counter
+                                        source = "image://live/image?id=" + counter
+                                        imageRect.grabToImage(function(result) {
+                                           result.saveToFile(VideoStreamer.getPathForSave() + "/image.jpg");
+                                       });
+                                    }
+
+                                }
+
+                            }
+
+
+                        }
+
+
+                        Connections{
+                            id: streamer
+                            target: VideoStreamer
+
+                        }
+
+                        Connections{
+                            target: liveImageProvider
+                            onImageChanged:{
+                                opencvImage.framespersecond++
+                                opencvImage.reload()
+                            }
+                        }
+
+                    }
+
+
                 }
             }
 
+            Component{
+                id: fullScreenPreview
+
+                Rectangle{
+
+                    Connections{
+                        target: DermaServer
+                        onPrediction:{
+                            prediction.text = predic;
+                        }
+                    }
+
+                    id: fullScreenPreviewRoot
+                    property color fullScreenPreviewColor: "light yellow"
+                    color: fullScreenPreviewColor
+
+                    Column{
+                        anchors.fill: parent
+                        spacing: 20
+
+                        Rectangle{
+                            width: parent.width - 20
+                            height: width
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.leftMargin: 10
+                            anchors.rightMargin: 10
+                            Image {
+                                anchors.fill: parent
+                                source: "file:///"+VideoStreamer.getPathForSave() + "/image.jpg"
+
+                            }
+                        }
+
+                        TextField{
+                            id: url
+                            text: "http://"
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Button{
+                            text: "Predict";
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            height: 40
+                            onClicked: {
+                                DermaServer.predictImage(VideoStreamer.getPathForSave() + "/image.jpg", url.text)
+                            }
+                        }
+
+                        Text {
+                            id: prediction
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: qsTr("Result")
+                        }
+
+                    }
+                }
+
+
+            }
         }
 
         Rectangle{

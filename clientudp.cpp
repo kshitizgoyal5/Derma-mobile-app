@@ -1,6 +1,7 @@
 #include "clientudp.h"
 #include <iostream>
 #include <QNetworkInterface>
+#include <QStandardPaths>
 /*
 struct packet_header{
     int magic_4byte;
@@ -107,6 +108,13 @@ void ClientUDP::disconnectFromserver()
 
 }
 
+QString ClientUDP::getPathForSave()
+{
+    QString path = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+    //path = path.mid(8, -1);
+    return path;
+}
+
 void ClientUDP::readSocket()
 {
         //qDebug() << "Ready Read";
@@ -138,9 +146,9 @@ void ClientUDP::readSocket()
             cacheMask[pkt.header.packet_no] = 1;
             packets_rec++;
         }
-        //qDebug() << packets_rec << packets_need;
+        qDebug() << pkt.header.packet_no << pkt.header.total_packets;
         if(packets_rec == packets_need){
-            //qDebug() << "NEW Image";
+            qDebug() << "NEW Image";
             packets_need = -1;
             packets_rec = 0;
             QByteArray IMAGE_DATA;

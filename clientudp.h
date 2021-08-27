@@ -38,6 +38,7 @@ public:
     Q_INVOKABLE void writeSocket(QString message);
     Q_INVOKABLE void connectToServer();
     Q_INVOKABLE void disconnectFromserver();
+    Q_INVOKABLE QString getPathForSave();
 
 public slots:
     void readSocket();

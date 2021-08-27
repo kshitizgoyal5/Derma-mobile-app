@@ -11,10 +11,12 @@ CONFIG += link_pkgconfig
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+        capturer.cpp \
         client.cpp \
         clientudp.cpp \
         main.cpp \
-        opencvimageprovider.cpp
+        opencvimageprovider.cpp \
+        webserver.cpp
 
 RESOURCES += qml.qrc
 
@@ -30,6 +32,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
+    capturer.h \
     client.h \
     clientudp.h \
-    opencvimageprovider.h
+    opencvimageprovider.h \
+    webserver.h
